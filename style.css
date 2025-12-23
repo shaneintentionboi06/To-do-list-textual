@@ -1,0 +1,26 @@
+.Task{
+    height: 9;
+    padding: 1;
+    margin: 1;
+    content-align: center middle;
+    background: $boost ;
+}
+
+.Task #Delete{
+    dock: right;
+    margin-top: 4;
+    align: center middle;
+}
+
+.Done{
+    display: none;
+}
+
+
+
+.Task Button{
+    dock: right;
+    height: 5;
+    margin-top: 1;
+    align:  center middle ;
+}

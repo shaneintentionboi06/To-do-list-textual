@@ -2,13 +2,21 @@ from textual.app import App,on
 from textual.widgets import Header,Footer,Static,Button,TextArea,Link
 from textual.containers import ScrollableContainer
 from textual.screen import ModalScreen
-from pyfiglet import format
+from pyfiglet import figlet_format
 
 class AboutScreen(ModalScreen):
+    BINDINGS = [('a','add_task','Add Task')]
     def compose(self):
+        yield Static(figlet_format('TODOLIST','slant'))
         yield Static("Hey There This is My Project. So You Find some error please forgive me. 🙏")
-        yield Link('Contribute On Github',)
-
+        yield Link(text='Contribute On Github',url='https://github.com/shaneintentionboi06/To-do-list-textual')
+    
+    def action_add_task(self):
+        Tid = self.app.DBcontrol.addtask('')
+        Container = self.app.query_one('.Tasks',ScrollableContainer)
+        Container.mount(Task(classes='Task',id=Tid))
+        self.app.pop_screen()
+    
 class Task(Static):
     def compose(self):
         yield TextArea(id='TheTask')
@@ -21,7 +29,7 @@ class Task(Static):
         mark = self.query_one('#Mark',Button)
         mark.add_class('Done')
         ID = self.id
-        DBcontrol.mark(ID,1)
+        self.app.DBcontrol.mark(ID,1)
         # mark = self.query_one('#Mark',Button)
         # mark.set_class('UnMarked')
     @on(Button.Pressed,'#Unmark')
@@ -29,12 +37,12 @@ class Task(Static):
         mark = self.query_one('#Mark',Button)
         mark.remove_class('Done')
         ID = self.id
-        DBcontrol.mark(ID,0)
+        self.app.DBcontrol.mark(ID,0)
     @on(TextArea.Changed,'#TheTask')
     def updatedb(self):
         ID = self.id
         Text = self.query_one('#TheTask').text
-        DBcontrol.updatetask(ID,Text)
+        self.app.DBcontrol.updatetask(ID,Text)
     # @on(Button.Pressed,'#Delete')
     def on_mount(self, event):
         ID = self.id.lstrip('T')
@@ -53,7 +61,8 @@ class TodoApp(App):
     CSS_PATH = 'style.css'
     
     def __init__(self, driver_class = None, css_path = None, watch_css = False, ansi_color = False):
-        self.existingtasks = DBcontrol.gettasks()
+        self.existingtasks = self.app.DBcontrol.gettasks()
+        # self.DBControl = DBcontrol
         super().__init__(driver_class, css_path, watch_css, ansi_color)
     
     def compose(self):
@@ -71,7 +80,7 @@ class TodoApp(App):
         # self.app.notify("Restored Existing Tasks")
     
     def action_add_task(self):
-        Tid = DBcontrol.addtask('')
+        Tid = self.app.DBcontrol.addtask('')
         Container = self.query_one('.Tasks',ScrollableContainer)
         Container.mount(Task(classes='Task',id=Tid))
     
@@ -80,8 +89,9 @@ class TodoApp(App):
         if theTask:
             ID = theTask.last().id
             theTask.last().remove()
-            DBcontrol.remtask(ID)
+            self.app.DBcontrol.remtask(ID)
         else:
+            self.app.push_screen(AboutScreen(id='Aboutpage'))
             self.app.notify('No Task available to remove',severity='error')
     def action_quit_app(self):
         self.app.exit()
